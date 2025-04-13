@@ -1,0 +1,42 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    pull_policy: always
+    tty: true
+    volumes:
+      - ollama:/root/.ollama
+    networks:
+      - caddy-network
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities:
+                - gpu
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui
+    container_name: open-webui
+    restart: unless-stopped
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - WEBUI_SECRET_KEY=
+    volumes:
+      - open-webui:/app/backend/data
+    depends_on:
+      - ollama
+    networks:
+      - caddy-network
+
+volumes:
+  ollama: {}
+  open-webui: {}
+
+networks:
+  caddy-network:
+    name: caddy-network
+    external: true
